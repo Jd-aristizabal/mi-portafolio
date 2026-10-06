@@ -1,0 +1,62 @@
+.portfolio.portfolio .eyebrow{font-size:10px;color:#73766b}
+.portfolio .hero-statement>.eyebrow{font-size:9px;color:#aaa9b2}
+.portfolio .hero-topline{font-size:10px;color:#acabb4}
+.portfolio .hero-topline .availability{font-size:9px;color:#d1d2ce}
+.portfolio .hero-topline>span:last-child{font-size:9px}
+.portfolio .hero-bottomline{font-size:9px;color:#acabb4}
+.portfolio .sculpture-caption{font-size:9px;color:#c5c1cf}
+.portfolio .sculpture-index{font-size:8px;color:#a4a0ae}
+.portfolio .expertise-line{font-size:10px;color:#707469}
+.portfolio .expertise-stack{color:#787d70}
+.portfolio .showcase-top{font-size:9px;color:#6d587e}
+.portfolio .showcase-bottom{font-size:8px;color:#6d587e}
+.portfolio .sprint-showcase .showcase-top,.portfolio .sprint-showcase .showcase-bottom{color:#b0c2a7}
+.portfolio .showcase-meta{font-size:9px;color:#747a69}
+.portfolio .showcase-info p,.portfolio .works-heading>p,.portfolio .skills-heading>p{font-size:12px;color:#74796c}
+.portfolio .intro-copy>p+p{color:#72776b}
+.portfolio .portfolio-contact .eyebrow{font-size:9px;color:#aaa7b4}
+.portfolio .contact-details>div>span{font-size:9px;color:#aaa7b4}
+.portfolio .contact-signature{font-size:9px;color:#aaa7b4}
+.portfolio .skills-section .skill-card-label{font-size:9px;color:#73766b}
+.portfolio .skills-section .skill-detail-top{font-size:9px;color:#aaaeba}
+.portfolio .skills-section .skill-editor header{font-size:9px;color:#a6aab5}
+.portfolio .skills-section .skill-detail-bottom{font-size:9px;color:#a6aab5}
+.site-footer.site-footer.site-footer{font-size:10px;color:#70766a}
+.site-footer.site-footer .footer-name>span{font-size:9px;color:#70766a}
+.site-footer.site-footer.home-footer{color:#aaa7b4}
+.site-footer.site-footer.home-footer .footer-name>span{color:#aaa7b4}
+.app-shell .eyebrow,.app-shell .demo-badge{font-size:10px}
+.app-shell .stat>span,.app-shell .stat small{font-size:11px;color:#72766b}
+.app-shell .small-label{font-size:9px;color:#73776d}
+.app-shell .priority{font-size:10px}
+.app-shell .panel-footnote,.app-shell .timer-tip{font-size:10px;color:#757a6d}
+.app-shell .chart-column,.app-shell .history-list small{font-size:10px;color:#74796c}
+.app-shell .game-topbar,.app-shell .game-bottom{font-size:9px;color:#b0bfa4}
+.app-shell .game-stats span{font-size:10px;color:#b0bfa4}
+.app-shell .game-overlay>small{font-size:10px;color:#b0bfa4}
+.app-shell .leaderboard-note,.app-shell .game-instructions>small{font-size:10px;color:#747c6b}
+.app-shell .game-caption p{font-size:11px;color:#747c6b}
+.chat-panel header small{font-size:10px;color:#72766b}
+.chat-panel .quick-actions>button{font-size:10px}
+@media(max-width:760px){
+  .portfolio.portfolio .eyebrow,.portfolio .hero-statement>.eyebrow{font-size:8px}
+  .portfolio .hero-topline,.portfolio .hero-topline .availability{font-size:8px}
+  .portfolio .hero-bottomline,.portfolio .hero-bottomline a{font-size:8px}
+  .portfolio .sculpture-caption,.portfolio .sculpture-index{font-size:7px}
+  .portfolio .expertise-line{font-size:8px}
+  .portfolio .showcase-top,.portfolio .showcase-bottom{font-size:7px}
+  .portfolio .showcase-meta{font-size:8px}
+  .portfolio .showcase-info p,.portfolio .works-heading>p,.portfolio .skills-heading>p{font-size:11px}
+  .portfolio .portfolio-contact .eyebrow,.portfolio .contact-signature{font-size:8px}
+  .app-shell .eyebrow,.app-shell .demo-badge{font-size:8px}
+  .app-shell .game-topbar,.app-shell .game-bottom{font-size:7px}
+  .app-shell .game-topbar>span:last-child{font-size:7px}
+}
+@media(max-width:480px){
+  .portfolio .hero-bottomline{flex-wrap:wrap;gap:10px}
+  .portfolio .showcase-meta{font-size:7px;max-width:95px}
+  .portfolio .showcase-bottom{font-size:6px}
+  .portfolio .contact-signature{font-size:7px;flex-wrap:wrap;row-gap:10px}
+  .site-footer.site-footer>a:last-child{font-size:10px;overflow-wrap:anywhere}
+  .app-shell .stat>span,.app-shell .stat small{font-size:9px}
+}
