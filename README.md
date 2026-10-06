@@ -19,6 +19,8 @@ Durante el desarrollo, `pnpm check:preview` verifica que el HTML y el módulo cl
 
 La compilación genera los archivos estáticos en `build/`. Las rutas `/`, `/works/focus-flow` y `/works/pixel-sprint` están prerenderizadas.
 
+La publicación en Vercel se configura en `vercel.json`: instalación reproducible con pnpm 11.19.0, compilación y publicación de `build/`. El preset es Other; no requiere variables de entorno ni servicios de servidor. La vinculación local de Vercel se excluye del repositorio.
+
 ## Organización
 
 - `src/lib/components`: componentes compartidos y confirmación accesible.
