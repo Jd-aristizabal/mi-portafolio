@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Asterisk from '$lib/components/Asterisk.svelte';
   import { onMount } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
@@ -64,7 +65,7 @@
 <svelte:head><title>Focus Flow — Johan Aristizabal</title></svelte:head>
 <div class="app-shell shell">
   <a class="back-link" href="/#works">← Volver a Works</a>
-  <div class="app-heading"><div><p class="eyebrow">WORK 01 / PRODUCTIVIDAD</p><h1>Focus <span class="serif">Flow.</span><span class="title-symbol">✳</span></h1><p>Respira. Elige una cosa. Encuentra tu ritmo.</p></div><span class="demo-badge"><span></span> TU ESPACIO DE ENFOQUE</span></div>
+  <div class="app-heading"><div><p class="eyebrow">WORK 01 / PRODUCTIVIDAD</p><h1>Focus <span class="serif">Flow.</span><span class="title-symbol"><Asterisk /></span></h1><p>Respira. Elige una cosa. Encuentra tu ritmo.</p></div><span class="demo-badge"><span></span> TU ESPACIO DE ENFOQUE</span></div>
   <div class="stats-row"><div class="stat"><span>Tareas completadas</span><strong>{completed}<small> / {$taskStore.tasks.length}</small></strong><Icon name="check" /></div><div class="stat"><span>Tiempo de enfoque</span><strong>{totalMinutes}<small> min</small></strong><Icon name="clock" /></div><div class="stat"><span>Sesiones terminadas</span><strong>{$taskStore.sessions.length}<small> sesiones</small></strong><Icon name="spark" /></div></div>
   <div class="focus-layout"><section class="panel tasks-panel"><div class="panel-heading"><h2>Tu próximo paso <span>{$taskStore.tasks.length}</span></h2><Icon name="spark" /></div>
     <form class="task-form" on:submit|preventDefault={saveTask}><label for="task-title">{editing ? 'Editar tarea' : '¿Qué quieres hacer hoy?'}</label><div class="task-input-row"><input id="task-title" bind:value={title} placeholder="Una tarea, una intención…" maxlength="120" required disabled={!ready} /><button class="button dark" disabled={!title.trim() || !ready}><Icon name={editing ? 'check' : 'plus'} /><span>{editing ? 'Guardar' : 'Crear'}</span></button></div><div class="form-bottom"><label for="task-priority">Prioridad</label><select id="task-priority" bind:value={priority}><option value="baja">Baja</option><option value="media">Media</option><option value="alta">Alta</option></select>{#if editing}<button type="button" class="text-button" on:click={() => { editing = null; title = ''; }}>Cancelar edición</button>{/if}</div></form>
