@@ -11,14 +11,14 @@
     sequence++;
     active = true;
     clearTimeout(cleanup);
-    cleanup = setTimeout(() => active = false, 950);
+    cleanup = setTimeout(() => active = false, 1200);
   });
   onDestroy(() => clearTimeout(cleanup));
 </script>
 {#if active}{#key sequence}<div class="navigation-curtain" aria-hidden="true"><span>{label}</span></div>{/key}{/if}
 <style>
-  .navigation-curtain{position:fixed;inset:0;background:#bda1ed;z-index:100;pointer-events:none;display:grid;place-items:center;color:#30233e;font-family:'Instrument Serif',Georgia,serif;font-size:clamp(35px,5vw,70px);animation:curtain-pass .9s cubic-bezier(.76,0,.24,1) both}
-  .navigation-curtain span{animation:curtain-label .9s both}
+  .navigation-curtain{position:fixed;inset:0;background:#bda1ed;z-index:100;pointer-events:none;display:grid;place-items:center;color:#30233e;font-family:'Instrument Serif',Georgia,serif;font-size:clamp(35px,5vw,70px);animation:curtain-pass 1.15s cubic-bezier(.76,0,.24,1) both}
+  .navigation-curtain span{animation:curtain-label 1.15s both}
   @keyframes curtain-pass{0%{transform:translateY(100%);border-radius:40% 40% 0 0}40%{transform:translateY(0);border-radius:0}100%{transform:translateY(-110%);border-radius:0 0 40% 40%}}
   @keyframes curtain-label{0%,15%{opacity:0;transform:translateY(15px)}35%,55%{opacity:1;transform:translateY(0)}80%,100%{opacity:0;transform:translateY(-15px)}}
   @media(prefers-reduced-motion:reduce){.navigation-curtain{display:none}}
