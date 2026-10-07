@@ -38,3 +38,11 @@
   .portfolio .skill-card::after,.portfolio .showcase-image::after { display: none; }
   .portfolio .skill-card:hover .skill-card-top > svg { transform: none; }
 }
+.portfolio .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 25px; margin-top: 32px; }
+.portfolio .hero-actions .round-link { margin-top: 0; }
+.portfolio .resume-link { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 5px 0; color: var(--hero-muted); font-size: 12px; animation-delay: .8s; transition: color .25s; }
+.portfolio .resume-link span { text-decoration: underline; text-decoration-color: color-mix(in srgb,currentColor 30%,transparent); text-underline-offset: 5px; }
+.portfolio .resume-link small { font-size: 9px; margin-left: 5px; letter-spacing: .06em; }
+.portfolio .resume-link svg { transition: transform .3s; }
+.portfolio .resume-link:hover { color: var(--theme-accent); }
+.portfolio .resume-link:hover svg { transform: translateY(2px); }

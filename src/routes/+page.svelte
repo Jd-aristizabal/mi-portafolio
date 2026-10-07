@@ -3,7 +3,7 @@
   import './portfolio.css';
   import Icon from '$lib/components/Icon.svelte';
   import Skills from '$lib/components/Skills.svelte';
-  import { contact } from '$lib/data/config';
+  import { contact, resume } from '$lib/data/config';
   import { reveal, magnetic, projectMotion, parallax, ambientMotion } from '$lib/animations/motion';
 </script>
 <svelte:head><title>Johan Aristizabal — Diseño, código & movimiento</title></svelte:head>
@@ -12,7 +12,7 @@
     <div class="hero-noise" aria-hidden="true"></div>
     <div class="hero-topline"><span class="availability"><span></span> ABIERTO A NUEVAS IDEAS</span><span>INDEPENDENT DESIGNER & DEVELOPER</span></div>
     <div class="hero-stage shell">
-      <div class="hero-statement"><p class="eyebrow hero-enter">DISEÑO + CÓDIGO + UN POCO DE CURIOSIDAD</p><h1><span class="line-mask"><span>Diseño que</span></span><span class="line-mask"><span>se <em>siente.</em><i><Asterisk /></i></span></span></h1><div class="hero-intro hero-enter"><span class="intro-arrow">↘</span><p>Transformo ideas en experiencias digitales.<br />Claras, intuitivas y con carácter.</p></div><a class="round-link hero-enter" href="#works" use:magnetic><span>Explora<br />mi trabajo</span><Icon name="arrow" size={22} /></a></div>
+      <div class="hero-statement"><p class="eyebrow hero-enter">DISEÑO + CÓDIGO + UN POCO DE CURIOSIDAD</p><h1><span class="line-mask"><span>Diseño que</span></span><span class="line-mask"><span>se <em>siente.</em><i><Asterisk /></i></span></span></h1><div class="hero-intro hero-enter"><span class="intro-arrow">↘</span><p>Transformo ideas en experiencias digitales.<br />Claras, intuitivas y con carácter.</p></div><div class="hero-actions"><a class="round-link hero-enter" href="#works" use:magnetic><span>Explora<br />mi trabajo</span><Icon name="arrow" size={22} /></a><a class="resume-link hero-enter" href={resume.url} download={resume.filename} aria-label="Descargar mi hoja de vida en PDF"><Icon name="download" size={16} /><span>Mi hoja de vida <small>PDF</small></span></a></div></div>
       <div class="sculpture-wrap" use:parallax={90}><div class="sculpture" aria-hidden="true"><div class="sculpture-orbit orbit-a"></div><div class="sculpture-orbit orbit-b"></div><div class="sculpture-orbit orbit-c"></div><div class="sculpture-core"><span>j.</span></div><span class="sculpture-satellite satellite-one"></span><span class="sculpture-satellite satellite-two"></span></div><a class="sculpture-caption" href="#works">EXPLORAR ES PARTE DEL PROCESO <i aria-hidden="true">↗</i></a><span class="sculpture-index" aria-hidden="true">FIG. 001 — SIEMPRE EN MOVIMIENTO</span></div>
     </div>
     <div class="name-ticker" aria-hidden="true"><div><span>Johan Aristizabal — </span><span>Johan Aristizabal — </span></div></div>
