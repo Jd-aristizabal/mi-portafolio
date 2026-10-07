@@ -1,0 +1,40 @@
+.portfolio .sculpture-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 5% -5% 10%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #bda1ed30, #bda1ed0c 45%, transparent 70%);
+  pointer-events: none;
+  animation: halo-breathe 7s ease-in-out infinite;
+  animation-play-state: var(--ambient-play, running);
+}
+.portfolio .skill-card::after {
+  content: '';
+  position: absolute;
+  inset: -60% -50%;
+  background: linear-gradient(115deg, transparent 40%, #bda1ed20 50%, transparent 60%);
+  transform: translateX(-85%);
+  pointer-events: none;
+}
+@media(hover:hover) and (pointer:fine) {
+  .portfolio .skill-card:hover::after { animation: card-gleam .75s ease-out both; }
+  .portfolio .skill-card-top > svg { transition: transform .45s cubic-bezier(.22,1,.36,1); }
+  .portfolio .skill-card:hover .skill-card-top > svg { transform: translateY(-3px) rotate(-7deg) scale(1.08); }
+  .portfolio .showcase-image::after {
+    content: '';
+    position: absolute;
+    inset: -25%;
+    background: linear-gradient(115deg, transparent 40%, #ffffff14 50%, transparent 60%);
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+  .portfolio .showcase:hover .showcase-image::after { animation: project-gleam 1s ease-out both; }
+}
+@keyframes halo-breathe { 0%,100% { transform: scale(.9); opacity: .55; } 50% { transform: scale(1.08); opacity: 1; } }
+@keyframes card-gleam { to { transform: translateX(85%); } }
+@keyframes project-gleam { to { transform: translateX(100%); } }
+@media(prefers-reduced-motion:reduce) {
+  .portfolio .sculpture-wrap::before { animation: none; }
+  .portfolio .skill-card::after,.portfolio .showcase-image::after { display: none; }
+  .portfolio .skill-card:hover .skill-card-top > svg { transform: none; }
+}

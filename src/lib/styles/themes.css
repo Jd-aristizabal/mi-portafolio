@@ -1,0 +1,171 @@
+:root {
+  color-scheme: light;
+  --surface: #fcfbf8;
+  --soft: #eeebe4;
+  --hero-surface: #f0ece6;
+  --hero-ink: #28252e;
+  --hero-muted: #66616e;
+  --theme-accent: #78549b;
+  --hero-line: #d6cfdc;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #1c1d20;
+  --ink: #f1eee8;
+  --muted: #b0adb8;
+  --line: #3b3b45;
+  --surface: #25262c;
+  --soft: #2d2d35;
+  --hero-surface: #1c1d20;
+  --hero-ink: #f5f3ee;
+  --hero-muted: #b6b2c1;
+  --theme-accent: #bda1ed;
+  --hero-line: #ffffff25;
+}
+:root[data-theme] { background: var(--paper); color: var(--ink); }
+body { background: var(--paper); }
+.header-actions { display: flex; align-items: center; gap: 8px; margin-left: 24px; }
+.site-header { position: relative; }
+.site-header nav { margin-left: auto; }
+:root[data-theme] .portfolio { background: var(--paper); --accent: var(--theme-accent); --night: var(--hero-surface); }
+:root[data-theme] .site-header.home-header,
+:root[data-theme] .portfolio .portfolio-hero,
+:root[data-theme] .portfolio .portfolio-contact,
+:root[data-theme] .site-footer.home-footer {
+  background: var(--hero-surface); color: var(--hero-ink); border-color: var(--hero-line);
+}
+:root[data-theme] .home-footer .footer-name { color: var(--hero-ink); }
+:root[data-theme] .portfolio .hero-statement > .eyebrow,
+:root[data-theme] .portfolio .hero-topline,
+:root[data-theme] .portfolio .hero-topline .availability,
+:root[data-theme] .portfolio .hero-bottomline,
+:root[data-theme] .portfolio .hero-intro p,
+:root[data-theme] .portfolio .sculpture-index,
+:root[data-theme] .portfolio .portfolio-contact .eyebrow,
+:root[data-theme] .portfolio .contact-details > div > span,
+:root[data-theme] .portfolio .contact-details > div > p,
+:root[data-theme] .portfolio .contact-signature,
+:root[data-theme] .site-footer.site-footer.home-footer,
+:root[data-theme] .site-footer.site-footer.home-footer .footer-name > span { color: var(--hero-muted); }
+:root[data-theme] .portfolio .round-link,
+:root[data-theme] .portfolio .sculpture-caption,
+:root[data-theme] .portfolio .contact-chip,
+:root[data-theme] .portfolio .contact-rule,
+:root[data-theme] .portfolio .contact-signature,
+:root[data-theme] .portfolio .hero-bottomline,
+:root[data-theme] .home-header .nav-contact { border-color: var(--hero-line); }
+:root[data-theme] .portfolio .sculpture-caption { color: var(--hero-ink); }
+:root[data-theme] .portfolio .contact-rule { background: var(--hero-line); }
+:root[data-theme] .portfolio .round-link:hover,
+:root[data-theme] .portfolio .contact-chip:hover { color: var(--paper); }
+:root[data-theme] .portfolio .name-ticker span { color: var(--hero-ink); }
+:root[data-theme] .home-header .brand-symbol > span { color: var(--theme-accent); }
+:root[data-theme] .portfolio .focus-scene { color: #242522; }
+:root[data-theme='light'] .portfolio .hero-topline .availability > span { background: #64823f; }
+:root[data-theme='light'] .home-header nav > a:hover { color: #78549b; }
+
+/* Superficies compartidas por las aplicaciones y el asistente. */
+:root[data-theme='dark'] .panel,
+:root[data-theme='dark'] .stat,
+:root[data-theme='dark'] .chat-panel,
+:root[data-theme='dark'] .confirm-dialog,
+:root[data-theme='dark'] .portfolio .skill-card { background: var(--surface); border-color: var(--line); }
+:root[data-theme='dark'] .portfolio.portfolio .eyebrow,
+:root[data-theme='dark'] .portfolio .expertise-line,
+:root[data-theme='dark'] .portfolio .expertise-stack,
+:root[data-theme='dark'] .portfolio .showcase-meta,
+:root[data-theme='dark'] .portfolio .showcase-info p,
+:root[data-theme='dark'] .portfolio .works-heading > p,
+:root[data-theme='dark'] .portfolio .skills-heading > p,
+:root[data-theme='dark'] .portfolio .intro-copy > p + p,
+:root[data-theme='dark'] .portfolio .skills-section .skill-card-label,
+:root[data-theme='dark'] .app-shell .stat > span,
+:root[data-theme='dark'] .app-shell .stat small,
+:root[data-theme='dark'] .app-shell .small-label,
+:root[data-theme='dark'] .app-shell .panel-footnote,
+:root[data-theme='dark'] .app-shell .timer-tip,
+:root[data-theme='dark'] .app-shell .chart-column,
+:root[data-theme='dark'] .app-shell .history-list small,
+:root[data-theme='dark'] .app-shell .leaderboard-note,
+:root[data-theme='dark'] .app-shell .game-instructions > small,
+:root[data-theme='dark'] .app-shell .game-instructions > p,
+:root[data-theme='dark'] .app-shell .game-caption p,
+:root[data-theme='dark'] .chat-panel header small,
+:root[data-theme='dark'] .site-footer.site-footer,
+:root[data-theme='dark'] .site-footer.site-footer .footer-name > span { color: var(--muted); }
+:root[data-theme='dark'] .portfolio .expertise-line,
+:root[data-theme='dark'] .portfolio .skill-filter,
+:root[data-theme='dark'] .portfolio .skill-filter button,
+:root[data-theme='dark'] .task-item,
+:root[data-theme='dark'] .history-list > div,
+:root[data-theme='dark'] .leader-row { border-color: var(--line); }
+:root[data-theme='dark'] .portfolio .skill-filter button { color: var(--muted); }
+:root[data-theme='dark'] .portfolio .skill-filter button.active { background: #bda1ed; color: #292133; border-color: #bda1ed; }
+:root[data-theme='dark'] .portfolio .skill-card.selected { border-color: var(--skill-color); }
+:root[data-theme='dark'] .dark { background: #bda1ed; color: #292133; }
+:root[data-theme='dark'] .dark:hover { background: #d0b7f4; }
+:root[data-theme='dark'] .skip-link { background: #bda1ed; color: #292133; }
+:root[data-theme='dark'] .task-input-row input,
+:root[data-theme='dark'] select { background: #202127; color: var(--ink); border-color: var(--line); }
+:root[data-theme='dark'] .duration-tabs,
+:root[data-theme='dark'] .chart-track,
+:root[data-theme='dark'] .panel-heading h2 > span,
+:root[data-theme='dark'] .bubble { background: var(--soft); color: var(--ink); }
+:root[data-theme='dark'] .duration-tabs > .chosen,
+:root[data-theme='dark'] .tabs .chosen,
+:root[data-theme='dark'] .bubble.user,
+:root[data-theme='dark'] .chat-avatar,
+:root[data-theme='dark'] .history-icon,
+:root[data-theme='dark'] .mock-badge { background: #3d324d; color: #d4b8f1; }
+:root[data-theme='dark'] .timer-circle { background: linear-gradient(var(--surface),var(--surface)) padding-box,conic-gradient(#bda1ed var(--progress),#3d3547 0) border-box; }
+:root[data-theme='dark'] .timer-circle > strong { color: #ceb1ec; }
+:root[data-theme='dark'] .timer-circle > span:last-child,
+:root[data-theme='dark'] .empty-state h3,
+:root[data-theme='dark'] .empty-state p,
+:root[data-theme='dark'] .record-panel > p:last-child { color: var(--muted); }
+:root[data-theme='dark'] .record-panel > strong { color: #d1f58c; }
+:root[data-theme='dark'] .record-panel > .eyebrow { color: #b6ce95; }
+:root[data-theme='dark'] .leader-row.local { background: #35412d; color: #d1f58c; }
+:root[data-theme='dark'] .chat-panel .quick-actions > button { color: #d4b8f1; border-color: #625173; }
+:root[data-theme='dark'] .quick-actions > button:hover { background: #3d324d; }
+:root[data-theme='dark'] .bubble a,
+:root[data-theme='dark'] .text-button { color: #cfb1ee; }
+:root[data-theme='dark'] .icon-button:hover { background: #ffffff0c; }
+:root[data-theme='dark'] .storage-note { color: #e0bb8c; }
+:root[data-theme='dark'] .priority { color: #d9bc7f; }
+:root[data-theme='dark'] .priority.high { color: #edaca2; }
+:root[data-theme='dark'] .priority.low { color: #a7c79b; }
+:root[data-theme='dark'] ::selection { background: #654d81; color: #fff; }
+
+/* El panel de código también recibe una versión diurna. */
+:root[data-theme='light'] .portfolio .skill-detail { background: #eae4f0; color: #302738; border-color: #d4c8df; }
+:root[data-theme='light'] .portfolio .skill-detail-top,
+:root[data-theme='light'] .portfolio .skill-description,
+:root[data-theme='light'] .portfolio .skill-tags > span,
+:root[data-theme='light'] .portfolio .skill-detail-bottom,
+:root[data-theme='light'] .portfolio .skill-copy-status { color: #66566f; border-color: #cfc3dc; }
+:root[data-theme='light'] .portfolio .skill-motto { color: #6b4e87; }
+:root[data-theme='light'] .portfolio .skill-editor { background: #faf7fc; border-color: #d4c8df; }
+:root[data-theme='light'] .portfolio .skill-editor header { color: #6e617a; border-color: #ded3e8; }
+:root[data-theme='light'] .portfolio .skill-editor pre,
+:root[data-theme='light'] .portfolio .skill-editor header > button { color: #67477d; }
+:root[data-theme='light'] .portfolio .skill-detail-icon { background: #faf7fc; border-color: #d4c8df; }
+
+@media(max-width:1050px) { .site-header nav { gap: 20px; } .header-actions { margin-left: 18px; } }
+@media(max-width:760px) {
+  .site-header nav { display: none; position: absolute; top: 78px; left: 0; right: 0; margin-left: 0; z-index: 50; padding: 25px 22px; border-bottom: 1px solid var(--line); box-shadow: 0 12px 15px #00000008; }
+  .site-header nav.mobile-open { display: flex; flex-direction: column; align-items: stretch; gap: 22px; }
+  .site-header nav a { font-size: 14px; padding: 8px; }
+  .site-header .mobile-menu { display: flex; }
+  :root[data-theme] .site-header nav.mobile-open { background: var(--hero-surface); color: var(--hero-ink); border-color: var(--hero-line); }
+  .header-actions { margin-left: auto; }
+}
+
+/* Un cambio de luz breve, sin animaciones de layout ni filtros costosos. */
+::view-transition-old(root) { animation: theme-out .4s ease both; }
+::view-transition-new(root) { animation: theme-in .55s cubic-bezier(.22,1,.36,1) both; }
+@keyframes theme-out { to { opacity: 0; } }
+@keyframes theme-in { from { opacity: 0; clip-path: circle(0% at 94% 4%); } to { opacity: 1; clip-path: circle(145% at 94% 4%); } }
+@media(prefers-reduced-motion:reduce) {
+  ::view-transition-old(root),::view-transition-new(root) { animation: none; }
+}

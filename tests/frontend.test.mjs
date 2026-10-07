@@ -4,12 +4,55 @@ import { get } from 'svelte/store';
 import { taskService } from '../src/lib/services/taskService.ts';
 import { scoreService } from '../src/lib/services/scoreService.ts';
 import { contactService } from '../src/lib/services/contactService.ts';
+import { themeService } from '../src/lib/services/themeService.ts';
+import { theme, themeActions } from '../src/lib/stores/theme.ts';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import { taskStore, taskActions } from '../src/lib/stores/tasks.ts';
 import { multiplierFor, levelFor, targetDurationFor, chooseTarget } from '../src/lib/utils/game.ts';
 let saved;
 beforeEach(() => {
   saved = new Map();
   globalThis.window = { localStorage: { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) } };
+});
+
+test('El aspecto sigue el dispositivo, conserva la elección y sincroniza otras pestañas', () => {
+  const listeners = new Map();
+  const media = { matches: true, addEventListener: (name, fn) => listeners.set(name, fn), removeEventListener: name => listeners.delete(name) };
+  let metaColor;
+  globalThis.document = { documentElement: { dataset: { themeKey: 'portfolio:theme' } }, querySelector: () => ({ setAttribute: (_name, value) => metaColor = value }) };
+  window.matchMedia = () => media;
+  window.addEventListener = (name, fn) => listeners.set(name, fn);
+  window.removeEventListener = name => listeners.delete(name);
+  const cleanup = themeActions.initialize();
+  assert.equal(get(theme), 'dark');
+  assert.equal(metaColor, '#1c1d20');
+  themeActions.toggle();
+  assert.equal(get(theme), 'light');
+  assert.equal(themeService.load(), 'light');
+  media.matches = true;
+  listeners.get('change')();
+  assert.equal(get(theme), 'light');
+  saved.set('portfolio:theme', JSON.stringify('dark'));
+  listeners.get('storage')({ key: 'portfolio:theme' });
+  assert.equal(document.documentElement.dataset.theme, 'dark');
+  cleanup();
+  assert.equal(listeners.size, 0);
+});
+
+test('El aspecto se aplica antes de pintar y tolera almacenamiento bloqueado o inválido', () => {
+  globalThis.document = { documentElement: { dataset: { themeKey: 'portfolio:theme' } }, querySelector: () => null };
+  theme.set('dark');
+  window.matchMedia = () => ({ matches: true });
+  const source = readFileSync(new URL('../static/theme-init.js', import.meta.url), 'utf8');
+  for (const [value, systemDark, expected] of [['"light"', true, 'light'], ['"dark"', false, 'dark'], ['invalido', true, 'dark'], ['"otro"', false, 'light'], [null, true, 'dark']]) {
+    const root = { dataset: { themeKey: 'portfolio:theme' } };
+    runInNewContext(source, { document: { documentElement: root, querySelector: () => null }, localStorage: { getItem: () => { if (value === null) throw new Error('Bloqueado'); return value; } }, matchMedia: () => ({ matches: systemDark }) });
+    assert.equal(root.dataset.theme, expected);
+  }
+  window.localStorage.setItem = () => { throw new Error('Bloqueado'); };
+  assert.doesNotThrow(() => themeActions.toggle());
+  assert.equal(get(theme), 'light');
 });
 test('Las tareas pueden crearse, editarse, completarse, recargarse y eliminarse', async () => {
   await taskActions.load();
