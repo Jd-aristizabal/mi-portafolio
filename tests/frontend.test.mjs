@@ -39,9 +39,14 @@ beforeEach(() => {
     else if (path === '/focus/sessions' && options.method === 'POST') { data = { ...body, id: crypto.randomUUID(), started_at: new Date().toISOString(), status: 'active', task_title: 'Proyecto', task_id: body.task_id || null }; remoteSessions.unshift(data); }
     else if (path === '/focus/sessions') data = remoteSessions;
     else if (path.startsWith('/focus/sessions/')) { data = remoteSessions.find(s => s.id === path.split('/')[3]); data.status = path.endsWith('/complete') ? 'completed' : 'cancelled'; data.finished_at = new Date().toISOString(); }
-    else if (path === '/games/pixel-sprint/scores') { remoteScores.push(body); data = body; }
-    else if (path === '/games/pixel-sprint/me') data = { best_score: Math.max(0, ...remoteScores.map(s => s.score)) };
-    else if (path === '/games/pixel-sprint/leaderboard') data = [{ player_name: null, score: 3000 }];
+    else if (/^\/games\/(pixel-sprint|orbit-match|pulse-orbit)\//.test(path)) {
+      const game = path.split('/')[2];
+      if (path.endsWith('/scores')) {
+        data = remoteScores.find(row => row.id === body.submission_id && row.game === game);
+        if (!data) { data = { ...body, game, id: body.submission_id || crypto.randomUUID(), created_at: new Date().toISOString() }; remoteScores.push(data); }
+      } else if (path.endsWith('/me')) { const scores = remoteScores.filter(row => row.game === game); data = { best_score: Math.max(0, ...scores.map(row => row.score)), scores }; }
+      else { const rows = remoteScores.filter(row => row.game === game); data = rows.length ? [rows.reduce((a, b) => a.score >= b.score ? a : b)] : []; }
+    }
     else if (path === '/chat') data = { conversation_id: 'saved-conversation', message: 'Johan desarrolla Focus Flow.' };
     else throw new Error('Ruta de prueba desconocida: ' + path);
     return Response.json({ data });
@@ -108,38 +113,56 @@ test('Las habilidades cambian de idioma sin alterar identidad, filtros ni datos 
   assert.equal(translateText('Focus Flow', 'en'), 'Focus Flow');
 });
 
-test('Las partidas conservan el nombre y se separan por juego sin enviar a rutas inexistentes', async () => {
-  const result = { score:700, max_combo:3, level:2, duration_seconds:40 };
-  await arcadeScoreService.record('orbit-match', result, '  Johan   A  ');
-  await arcadeScoreService.record('pulse-orbit', { ...result, score:900 }, 'Luna');
-  assert.equal(arcadeScoreService.history('orbit-match')[0].name, 'Johan A');
-  assert.equal(arcadeScoreService.history('pulse-orbit')[0].score, 900);
-  assert.equal(arcadeScoreService.best('orbit-match'), 700);
-  assert.equal((await arcadeScoreService.summary('orbit-match')).history[0].name, 'Johan A');
-  assert.equal(arcadeScoreService.playerName(), 'Luna');
-  assert.equal(calls.length, 0);
+test('Nombre y puntuación se publican y el historial se recupera por juego', async () => {
+  for (const game of ['pixel-sprint', 'orbit-match', 'pulse-orbit']) {
+    const result = { score:200, max_combo:1, level:1, duration_seconds:40 };
+    const id = crypto.randomUUID();
+    await arcadeScoreService.record(game, result, '  Johan   A  ', id);
+    await arcadeScoreService.record(game, result, 'Johan A', id);
+    const summary = await arcadeScoreService.summary(game);
+    assert.equal(summary.history.length, 1);
+    assert.equal(summary.history[0].name, 'Johan A');
+    assert.equal(summary.best, 200);
+    assert.equal(summary.community[0].name, 'Johan A');
+    const sent = calls.find(call => call.path === `/games/${game}/scores`);
+    assert.equal(sent.body.player_name, 'Johan A');
+    assert.equal(sent.body.submission_id, id);
+    assert.ok(sent.headers['X-Client-ID']);
+  }
+  assert.equal(remoteScores.length, 3);
+  assert.equal(arcadeScoreService.playerName(), 'Johan A');
+});
+
+test('Un fallo de red no confirma un guardado ni altera el récord del servidor', async () => {
+  const result = { score:100, max_combo:1, level:1, duration_seconds:30 };
+  await arcadeScoreService.summary('pixel-sprint');
   await arcadeScoreService.record('pixel-sprint', result, 'Johan');
-  assert.deepEqual(remoteScores[0], result);
-  assert.equal(arcadeScoreService.history('pixel-sprint')[0].name, 'Johan');
   globalThis.fetch = async () => { throw new Error('Sin conexión'); };
-  const offline = await arcadeScoreService.record('pixel-sprint', { ...result, score:1200 }, 'Luna');
-  assert.ok(offline.remoteError);
-  assert.equal(arcadeScoreService.best('pixel-sprint'), 1200);
+  await assert.rejects(arcadeScoreService.record('pixel-sprint', { ...result, score:1200 }, 'Luna'), /conectar/);
+  assert.equal(arcadeScoreService.best('pixel-sprint'), 100);
+  assert.equal(arcadeScoreService.history('pixel-sprint').length, 1);
+  assert.ok((await arcadeScoreService.summary('pixel-sprint')).error);
   await assert.rejects(arcadeScoreService.record('orbit-match', result, ' '), /nombre/);
   await assert.rejects(arcadeScoreService.record('orbit-match', { ...result, score:NaN }, 'Johan'), /puntuación/);
 });
 
-test('El récord sobrevive al límite del historial y los fallos de guardado no simulan éxito', async () => {
-  const result = { score:10000, max_combo:3, level:2, duration_seconds:40 };
-  await arcadeScoreService.record('orbit-match', result, 'Johan');
-  for (let i = 0; i < 160; i++) await arcadeScoreService.record('orbit-match', { ...result, score:i }, 'Luna');
-  assert.equal(arcadeScoreService.best('orbit-match'), 10000);
-  assert.ok(JSON.parse(saved.get('portfolio:arcade-scores:v1')).length <= 150);
-  saved.set('portfolio:arcade-scores:v1', '{malformado');
-  assert.deepEqual(arcadeScoreService.history('orbit-match'), []);
+test('Una preferencia local bloqueada no invalida una partida aceptada por el servidor', async () => {
+  clientID();
   window.localStorage.setItem = () => { throw new Error('Bloqueado'); };
-  await assert.rejects(arcadeScoreService.record('orbit-match', result, 'Johan'), /guardar/);
-  assert.equal(calls.length, 0);
+  const saved = await arcadeScoreService.record('pulse-orbit', { score:200, max_combo:1, level:1, duration_seconds:40 }, 'Luna');
+  assert.equal(saved.entry.name, 'Luna');
+  assert.equal(remoteScores.length, 1);
+});
+
+test('Las partidas anteriores con nombre se importan sin duplicarlas y dejan de ser locales', async () => {
+  const row = { id:crypto.randomUUID(), game:'orbit-match', name:'Johan', score:175, max_combo:1, level:2, duration_seconds:60, createdAt:new Date().toISOString() };
+  saved.set('portfolio:arcade-scores:v1', JSON.stringify([row]));
+  const summary = await arcadeScoreService.summary('orbit-match');
+  assert.equal(summary.history[0].id, row.id);
+  assert.equal(summary.community[0].name, 'Johan');
+  assert.deepEqual(JSON.parse(saved.get('portfolio:arcade-scores:v1')), []);
+  await arcadeScoreService.summary('orbit-match');
+  assert.equal(remoteScores.length, 1);
 });
 
 test('La memoria siempre tiene seis parejas y el pulso mide correctamente el cruce de cero', () => {

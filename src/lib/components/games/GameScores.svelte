@@ -23,14 +23,18 @@
     } catch { if (token === request) error = 'No se pudieron cargar tus partidas.'; }
     finally { if (token === request) loading = false; }
   }
-  onMount(() => { ready = true; return () => { request++; }; });
+  onMount(() => {
+    ready = true;
+    const refresh = setInterval(() => { void load(); }, 65000);
+    return () => { request++; clearInterval(refresh); };
+  });
 </script>
 <aside class="arcade-scores">
   <section class="arcade-record"><span>MEJOR MARCA</span><strong>{best.toLocaleString('es-CO')}</strong><p>Tu próximo reto empieza aquí.</p></section>
   <section class="panel"><div class="panel-heading"><h2>Tus partidas</h2><span class="muted">{history.length.toString().padStart(2,'0')}</span></div>
     {#each history as row}<div class="named-score"><div><strong>{row.name}</strong><small>{new Date(row.createdAt).toLocaleDateString('es-CO', { day:'numeric', month:'short' })}</small></div><span>{row.score.toLocaleString('es-CO')}</span></div>{:else}<div class="arcade-empty"><span aria-hidden="true">↗</span><p>Tu nombre podría estar aquí.</p><small>Juega y guarda tu primera partida.</small></div>{/each}
-    <p class="score-location">Guardadas en este navegador.</p>
+    <p class="score-location">Guardadas en el servidor.</p>
   </section>
-  {#if game === 'pixel-sprint'}<section class="panel"><div class="panel-heading"><h2>Ranking global</h2><span class="mock-badge">TOP 10</span></div>{#each community as row, i}<div class="named-score"><div><strong>{i + 1}. {row.name}</strong></div><span>{row.score.toLocaleString('es-CO')}</span></div>{/each}{#if loading}<p class="score-location">Actualizando ranking…</p>{/if}{#if error}<p class="score-location" role="status">{error}</p>{/if}</section>{/if}
+  <section class="panel"><div class="panel-heading"><h2>Ranking global</h2><span class="mock-badge">TOP 10</span></div>{#each community as row, i}<div class="named-score"><div><strong>{i + 1}. {row.name}</strong></div><span>{row.score.toLocaleString('es-CO')}</span></div>{/each}{#if loading}<p class="score-location">Actualizando ranking…</p>{/if}{#if error}<p class="score-location" role="status">{error}</p>{/if}</section>
   <a class="arcade-other" href="/#works">Explorar otras experiencias <span>↗</span></a>
 </aside>
