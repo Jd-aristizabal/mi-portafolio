@@ -1,6 +1,6 @@
 # Portafolio de Johan Aristizabal
 
-Frontend estático con SvelteKit, Svelte, TypeScript y CSS. Incluye portafolio, Focus Flow, Pixel Sprint y un asistente con respuestas predefinidas.
+Portafolio estático construido con SvelteKit, Svelte, TypeScript y CSS. Incluye Focus Flow, Pixel Sprint, Orbit Match, Pulse Orbit, Color Studio y un asistente. Las animaciones respetan movimiento reducido y la interfaz admite aspecto diurno y nocturno.
 
 ## Desarrollo
 
@@ -15,30 +15,22 @@ pnpm build
 pnpm preview
 ```
 
-Durante el desarrollo, `pnpm check:preview` verifica que el HTML y el módulo cliente entreguen la misma interfaz antes y después de una edición. Requiere `pnpm dev` activo. La prueba agrega temporalmente un atributo de diagnóstico a la página y restaura el archivo al terminar. La detección de archivos usa polling para mantener ambas versiones actualizadas en Windows.
+La compilación genera `build/`. Las seis rutas están prerenderizadas: `/`, `/works/focus-flow/`, `/works/pixel-sprint/`, `/works/orbit-match/`, `/works/pulse-orbit/` y `/lab/color-studio/`. Vercel publica los archivos estáticos según `vercel.json`.
 
-La compilación genera los archivos estáticos en `build/`. Las rutas `/`, `/works/focus-flow` y `/works/pixel-sprint` están prerenderizadas.
+`pnpm check:preview` comprueba que el HTML y el módulo cliente muestran la misma interfaz tras una edición. Requiere el servidor de desarrollo activo y restaura el archivo después de comprobarlo.
 
-La publicación en Vercel se configura en `vercel.json`: instalación reproducible con pnpm 11.19.0, compilación y publicación de `build/`. El preset es Other; no requiere variables de entorno ni servicios de servidor. La vinculación local de Vercel se excluye del repositorio.
+## Experiencias
+
+- Focus Flow organiza tareas y sesiones con la API ya integrada.
+- Pixel Sprint: 30 segundos de reflejos, combo y dificultad progresiva. Al guardar, conserva el nombre y la partida en el navegador y envía la puntuación a la API existente.
+- Orbit Match: seis parejas, 60 segundos, bonificación por rachas y tiempo restante.
+- Pulse Orbit: 40 segundos para tocar cuando el satélite atraviesa el arco. Los aciertos perfectos y las rachas multiplican los puntos.
+- Color Studio genera armonías, prueba una composición, calcula contraste y copia colores o variables CSS.
+
+Los tres juegos preguntan por un nombre o apodo al guardar. `arcadeScoreService` mantiene historiales independientes y conserva los mejores resultados aunque se alcance el límite del historial. Orbit Match y Pulse Orbit utilizan guardado local mientras se confirma el contrato de sus rutas de servidor. El ranking global de Pixel Sprint conserva sus datos reales, sin jugadores ficticios. La situación de la integración y las rutas verificadas están documentadas en [Integración API](docs/integracion-api.md).
 
 ## Organización
 
-- `src/lib/components`: componentes compartidos y confirmación accesible.
-- `src/lib/stores`: estado y acciones de tareas.
-- `src/lib/services`: contratos implementados con almacenamiento local y datos de ejemplo.
-- `src/lib/types`: interfaces de repositorios, tareas, sesiones y puntuaciones.
-- `src/lib/data`: configuración de contacto, respuestas y datos mock.
-- `src/lib/utils`: reglas del juego y formato de tiempo.
-- `src/lib/animations`: apariciones por scroll, botones magnéticos, parallax y movimiento de proyectos con APIs nativas.
+`src/lib/components` contiene UI compartida; `services` contiene acceso a API y almacenamiento; `stores` mantiene estado compartido; `types` define contratos; `data` centraliza configuración; `utils` contiene reglas y cálculos; `animations` contiene acciones y transiciones. Los componentes no acceden directamente a localStorage.
 
-Los componentes no acceden directamente a localStorage. Para una integración futura, sustituir las implementaciones de `taskService` y `scoreService`, conservando sus interfaces. No se incluyen endpoints, servicios de servidor, autenticación ni bases de datos.
-
-Focus Flow guarda tareas y las últimas 100 sesiones terminadas en este navegador. El temporizador admite 1, 15, 25 y 50 minutos; navegar fuera de la demo termina la sesión en curso sin registrarla. Pixel Sprint dura 30 segundos, aumenta la velocidad cada 7 aciertos y el multiplicador cada 5, hasta ×5. El leaderboard incluye personajes de ejemplo y el mejor resultado local.
-
-Los datos locales no se sincronizan entre dispositivos. Los enlaces y el contacto se configuran en `src/lib/data/config.ts`. El asistente usa reglas locales y no envía mensajes. Las tipografías se cargan desde Google Fonts, con fuentes de sistema como alternativa. Las animaciones respetan la preferencia de movimiento reducido.
-
-El portafolio combina una portada oscura, tipografía editorial, una figura orbital creada con CSS y previews detallados de los proyectos. El movimiento del cursor se habilita únicamente con punteros precisos; en pantallas táctiles las demos se abren directamente al tocar las tarjetas. Los efectos de scroll usan IntersectionObserver y requestAnimationFrame, con limpieza al salir de la página. Las transiciones de navegación no bloquean los enlaces.
-
-Las apariciones comparten un observador. Las animaciones ambientales se pausan fuera de pantalla o cuando la pestaña está oculta; el parallax no solicita frames si su elemento no es visible. El CSS compartido excluye los estilos de la portada anterior.
-
-La sección Skills incluye filtros, selección de tecnología y ejemplos de código que se pueden copiar. El contenido se configura en `src/lib/data/skills.ts`; los iconos SVG se renderizan localmente en `SkillIcon.svelte`. Los ejemplos son texto ilustrativo y no se ejecutan. La sección es navegable con teclado y respeta la preferencia de movimiento reducido.
+La variable pública `VITE_API_URL` configura la API existente. No se incluyen credenciales ni servicios de servidor. Contacto y descarga del CV se configuran en `src/lib/data/config.ts`. Las tipografías tienen fuentes de sistema como alternativa. Las animaciones ambientales se pausan fuera de pantalla; el átomo conserva su movimiento propio y desactiva parallax en móvil.

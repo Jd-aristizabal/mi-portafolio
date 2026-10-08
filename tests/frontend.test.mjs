@@ -12,6 +12,9 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { cardGleam } from '../src/lib/animations/cardGleam.ts';
 import { parallax } from '../src/lib/animations/motion.ts';
+import { arcadeScoreService } from '../src/lib/services/arcadeScoreService.ts';
+import { memoryDeck, angleDistance, pulsePoints } from '../src/lib/utils/arcade.ts';
+import { buildPalette, hslHex, contrast, paletteText } from '../src/lib/utils/palette.ts';
 import { taskStore, taskActions } from '../src/lib/stores/tasks.ts';
 import { multiplierFor, levelFor, targetDurationFor, chooseTarget } from '../src/lib/utils/game.ts';
 let saved, remoteTasks, remoteSessions, remoteScores, calls;
@@ -39,6 +42,68 @@ beforeEach(() => {
     else throw new Error('Ruta de prueba desconocida: ' + path);
     return Response.json({ data });
   };
+});
+
+test('Las partidas conservan el nombre y se separan por juego sin enviar a rutas inexistentes', async () => {
+  const result = { score:700, max_combo:3, level:2, duration_seconds:40 };
+  await arcadeScoreService.record('orbit-match', result, '  Johan   A  ');
+  await arcadeScoreService.record('pulse-orbit', { ...result, score:900 }, 'Luna');
+  assert.equal(arcadeScoreService.history('orbit-match')[0].name, 'Johan A');
+  assert.equal(arcadeScoreService.history('pulse-orbit')[0].score, 900);
+  assert.equal(arcadeScoreService.best('orbit-match'), 700);
+  assert.equal((await arcadeScoreService.summary('orbit-match')).history[0].name, 'Johan A');
+  assert.equal(arcadeScoreService.playerName(), 'Luna');
+  assert.equal(calls.length, 0);
+  await arcadeScoreService.record('pixel-sprint', result, 'Johan');
+  assert.deepEqual(remoteScores[0], result);
+  assert.equal(arcadeScoreService.history('pixel-sprint')[0].name, 'Johan');
+  globalThis.fetch = async () => { throw new Error('Sin conexión'); };
+  const offline = await arcadeScoreService.record('pixel-sprint', { ...result, score:1200 }, 'Luna');
+  assert.ok(offline.remoteError);
+  assert.equal(arcadeScoreService.best('pixel-sprint'), 1200);
+  await assert.rejects(arcadeScoreService.record('orbit-match', result, ' '), /nombre/);
+  await assert.rejects(arcadeScoreService.record('orbit-match', { ...result, score:NaN }, 'Johan'), /puntuación/);
+});
+
+test('El récord sobrevive al límite del historial y los fallos de guardado no simulan éxito', async () => {
+  const result = { score:10000, max_combo:3, level:2, duration_seconds:40 };
+  await arcadeScoreService.record('orbit-match', result, 'Johan');
+  for (let i = 0; i < 160; i++) await arcadeScoreService.record('orbit-match', { ...result, score:i }, 'Luna');
+  assert.equal(arcadeScoreService.best('orbit-match'), 10000);
+  assert.ok(JSON.parse(saved.get('portfolio:arcade-scores:v1')).length <= 150);
+  saved.set('portfolio:arcade-scores:v1', '{malformado');
+  assert.deepEqual(arcadeScoreService.history('orbit-match'), []);
+  window.localStorage.setItem = () => { throw new Error('Bloqueado'); };
+  await assert.rejects(arcadeScoreService.record('orbit-match', result, 'Johan'), /guardar/);
+  assert.equal(calls.length, 0);
+});
+
+test('La memoria siempre tiene seis parejas y el pulso mide correctamente el cruce de cero', () => {
+  const deck = memoryDeck(() => .35);
+  assert.equal(deck.length, 12);
+  assert.equal(new Set(deck.map(card => card.id)).size, 12);
+  for (let symbol = 0; symbol < 6; symbol++) assert.equal(deck.filter(card => card.symbol === symbol).length, 2);
+  assert.equal(angleDistance(359,1), 2);
+  assert.equal(angleDistance(1,359), 2);
+  assert.equal(pulsePoints(2,0), 200);
+  assert.equal(pulsePoints(12,4), 200);
+  assert.equal(pulsePoints(17,9), 0);
+  assert.equal(pulsePoints(0,100), 800);
+});
+
+test('Color Studio genera colores válidos y conserva el contraste de texto sobre el fondo', () => {
+  assert.equal(hslHex(0,100,50), '#ff0000');
+  assert.equal(hslHex(120,100,50), '#00ff00');
+  assert.equal(hslHex(240,100,50), '#0000ff');
+  for (const harmony of ['analogous','complementary','triadic']) for (let hue = 0; hue < 360; hue += 15) {
+    const colors = buildPalette(hue, harmony);
+    assert.equal(colors.length, 5);
+    for (const color of colors) {
+      assert.match(color.hex, /^#[0-9a-f]{6}$/);
+      assert.ok(contrast(color.hex,paletteText(color.hex)) >= 4.5);
+    }
+    assert.ok(contrast(colors[0].hex,colors[4].hex) >= 4.5);
+  }
 });
 
 test('El átomo no se desplaza con el scroll móvil y recupera el parallax en escritorio', () => {

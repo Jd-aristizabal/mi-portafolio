@@ -7,7 +7,7 @@
   let cleanup: ReturnType<typeof setTimeout>;
   afterNavigate(({ from, to }) => {
     if (!from || !to || from.url.pathname === to.url.pathname || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    label = to.url.pathname.includes('focus-flow') ? 'Encuentra tu flow.' : to.url.pathname.includes('pixel-sprint') ? 'Entra en juego.' : 'Siempre creando.';
+    label = to.url.pathname.includes('focus-flow') ? 'Encuentra tu flow.' : to.url.pathname.includes('pixel-sprint') ? 'Entra en juego.' : to.url.pathname.includes('orbit-match') ? 'Todo está conectado.' : to.url.pathname.includes('pulse-orbit') ? 'Encuentra tu instante.' : to.url.pathname.includes('color-studio') ? 'Dale un nuevo color.' : 'Siempre creando.';
     sequence++;
     active = true;
     clearTimeout(cleanup);

@@ -3,6 +3,7 @@
   import '$lib/styles/readability.css';
   import '$lib/styles/themes.css';
   import '$lib/styles/details.css';
+  import '$lib/styles/arcade.css';
   import { page } from '$app/stores';
   import Icon from '$lib/components/Icon.svelte';
   import Chatbot from '$lib/components/Chatbot.svelte';
@@ -17,7 +18,7 @@
 <a class="skip-link" href="#main">Saltar al contenido</a>
 <header class="site-header" class:home-header={path === '/'}>
   <a href="/" class="brand" aria-label="Johan Aristizabal, inicio"><span class="brand-symbol">j<span>.</span></span><span>johan<span class="muted">/</span>aristizabal</span></a>
-  <nav class:mobile-open={menuOpen} aria-label="Navegación principal"><a href="/#works" class:active={path.startsWith('/works')} on:click={() => menuOpen = false}>Works <span>02</span></a><a href="/#skills" on:click={() => menuOpen = false}>Skills</a><a href="/#about" on:click={() => menuOpen = false}>Sobre mí</a><a class="nav-contact" href={contact.whatsappUrl} target="_blank" rel="noreferrer">Hablemos <Icon name="external" size={15} /></a></nav>
+  <nav class:mobile-open={menuOpen} aria-label="Navegación principal"><a href="/#works" class:active={path.startsWith('/works')} on:click={() => menuOpen = false}>Works <span>04</span></a><a href="/#skills" on:click={() => menuOpen = false}>Skills</a><a href="/#about" on:click={() => menuOpen = false}>Sobre mí</a><a class="nav-contact" href={contact.whatsappUrl} target="_blank" rel="noreferrer">Hablemos <Icon name="external" size={15} /></a></nav>
   <div class="header-actions"><ThemeToggle /><button class="mobile-menu icon-button" aria-label="Abrir menú" aria-expanded={menuOpen} on:click={() => menuOpen = !menuOpen}><Icon name={menuOpen ? 'close' : 'menu'} /></button></div>
 </header>
 <main id="main">{#key path}<div class="route-stage"><slot /></div>{/key}</main>
