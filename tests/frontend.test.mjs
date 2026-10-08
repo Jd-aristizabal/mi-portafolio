@@ -8,12 +8,43 @@ import { themeService } from '../src/lib/services/themeService.ts';
 import { theme, themeActions } from '../src/lib/stores/theme.ts';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import { cardGleam } from '../src/lib/animations/cardGleam.ts';
 import { taskStore, taskActions } from '../src/lib/stores/tasks.ts';
 import { multiplierFor, levelFor, targetDurationFor, chooseTarget } from '../src/lib/utils/game.ts';
 let saved;
 beforeEach(() => {
   saved = new Map();
   globalThis.window = { localStorage: { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) } };
+});
+
+test('El reflejo funciona al tocar, se reinicia y respeta movimiento reducido', () => {
+  const preference = Object.assign(new EventTarget(), { matches: false });
+  window.matchMedia = () => preference;
+  const animations = [];
+  const layer = { animate: () => {
+    const animation = { cancelled: false, cancel() { this.cancelled = true; } };
+    animations.push(animation);
+    return animation;
+  } };
+  const card = Object.assign(new EventTarget(), { querySelector: () => layer });
+  const action = cardGleam(card);
+  const touchEnter = Object.assign(new Event('pointerenter'), { pointerType: 'touch' });
+  card.dispatchEvent(touchEnter);
+  assert.equal(animations.length, 0);
+  card.dispatchEvent(new Event('click'));
+  assert.equal(animations.length, 1);
+  card.dispatchEvent(new Event('click'));
+  assert.equal(animations[0].cancelled, true);
+  assert.equal(animations.length, 2);
+  preference.matches = true;
+  preference.dispatchEvent(new Event('change'));
+  assert.equal(animations[1].cancelled, true);
+  card.dispatchEvent(new Event('click'));
+  assert.equal(animations.length, 2);
+  preference.matches = false;
+  action.destroy();
+  card.dispatchEvent(new Event('click'));
+  assert.equal(animations.length, 2);
 });
 
 test('El aspecto sigue el dispositivo, conserva la elección y sincroniza otras pestañas', () => {
