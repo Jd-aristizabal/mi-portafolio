@@ -2,6 +2,8 @@
 
 Portafolio estático construido con SvelteKit, Svelte, TypeScript y CSS. Incluye Focus Flow, Pixel Sprint, Orbit Match, Pulse Orbit, Color Studio y un asistente. Las animaciones respetan movimiento reducido y la interfaz admite aspecto diurno y nocturno.
 
+El inicio permite cambiar entre español e inglés con el selector ES / EN junto al tema. La preferencia se guarda en el navegador y se sincroniza entre pestañas. Las traducciones se centralizan en `src/lib/data/translations.ts` y `skillsEnglish.ts`. Las pantallas de las experiencias conservan su idioma original.
+
 ## Desarrollo
 
 Requiere Node.js 22.12 o posterior y pnpm.

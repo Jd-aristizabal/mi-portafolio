@@ -156,8 +156,8 @@ body { background: var(--paper); }
 :root[data-theme='light'] .portfolio .skill-detail-icon { background: #faf7fc; border-color: #d4c8df; }
 
 @media(max-width:1050px) { .site-header nav { gap: 20px; } .header-actions { margin-left: 18px; } }
-@media(max-width:760px) {
-  .site-header nav { display: none; position: absolute; top: 78px; left: 0; right: 0; margin-left: 0; z-index: 50; padding: 25px 22px; border-bottom: 1px solid var(--line); box-shadow: 0 12px 15px #00000008; }
+@media(max-width:900px) {
+  .site-header nav { display: none; position: absolute; top: 100%; left: 0; right: 0; margin-left: 0; z-index: 50; padding: 25px 22px; border-bottom: 1px solid var(--line); box-shadow: 0 12px 15px #00000008; }
   .site-header nav.mobile-open { display: flex; flex-direction: column; align-items: stretch; gap: 22px; }
   .site-header nav a { font-size: 14px; padding: 8px; }
   .site-header .mobile-menu { display: flex; }

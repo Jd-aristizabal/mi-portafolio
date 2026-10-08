@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { translate as t } from '$lib/stores/language';
   import { afterNavigate } from '$app/navigation';
   import { onDestroy } from 'svelte';
   let active = false;
@@ -15,7 +16,7 @@
   });
   onDestroy(() => clearTimeout(cleanup));
 </script>
-{#if active}{#key sequence}<div class="navigation-curtain" aria-hidden="true"><span>{label}</span></div>{/key}{/if}
+{#if active}{#key sequence}<div class="navigation-curtain" aria-hidden="true"><span>{$t(label)}</span></div>{/key}{/if}
 <style>
   .navigation-curtain{position:fixed;inset:0;background:#bda1ed;z-index:100;pointer-events:none;display:grid;place-items:center;color:#30233e;font-family:'Instrument Serif',Georgia,serif;font-size:clamp(35px,5vw,70px);animation:curtain-pass 1.15s cubic-bezier(.76,0,.24,1) both}
   .navigation-curtain span{animation:curtain-label 1.15s both}

@@ -1,6 +1,10 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { get } from 'svelte/store';
+import { language, languageActions, translate } from '../src/lib/stores/language.ts';
+import { languageService } from '../src/lib/services/languageService.ts';
+import { translateText } from '../src/lib/data/translations.ts';
+import { localizedSkills } from '../src/lib/data/skillsEnglish.ts';
 import { taskService } from '../src/lib/services/taskService.ts';
 import { scoreService } from '../src/lib/services/scoreService.ts';
 import { chatService } from '../src/lib/services/chatService.ts';
@@ -42,6 +46,66 @@ beforeEach(() => {
     else throw new Error('Ruta de prueba desconocida: ' + path);
     return Response.json({ data });
   };
+});
+
+test('El idioma conserva la preferencia, se sincroniza entre pestañas y limpia el listener', () => {
+  const listeners = new Map();
+  window.addEventListener = (event, listener) => listeners.set(event, listener);
+  window.removeEventListener = (event, listener) => { if (listeners.get(event) === listener) listeners.delete(event); };
+  saved.set(languageService.storageKey, JSON.stringify('en'));
+  const cleanup = languageActions.initialize();
+  assert.equal(get(language), 'en');
+  assert.equal(get(translate)('Mi hoja de vida'), 'My résumé');
+  languageActions.toggle();
+  assert.equal(get(language), 'es');
+  assert.equal(JSON.parse(saved.get(languageService.storageKey)), 'es');
+  saved.set(languageService.storageKey, JSON.stringify('en'));
+  listeners.get('storage')({ key: 'otra-preferencia' });
+  assert.equal(get(language), 'es');
+  listeners.get('storage')({ key: languageService.storageKey });
+  assert.equal(get(language), 'en');
+  saved.clear();
+  listeners.get('storage')({ key: null });
+  assert.equal(get(language), 'es');
+  cleanup();
+  assert.equal(listeners.size, 0);
+});
+
+test('El selector sigue funcionando sin almacenamiento y marca el idioma del inicio', () => {
+  saved.set(languageService.storageKey, JSON.stringify('fr'));
+  assert.equal(languageService.load(), 'es');
+  window.localStorage.getItem = () => { throw new Error('Bloqueado'); };
+  window.localStorage.setItem = () => { throw new Error('Bloqueado'); };
+  assert.equal(languageService.load(), 'es');
+  language.set('es');
+  languageActions.toggle();
+  assert.equal(get(language), 'en');
+  const previousDocument = globalThis.document;
+  globalThis.document = { documentElement: { lang: 'es' } };
+  try {
+    languageService.apply('en', true);
+    assert.equal(document.documentElement.lang, 'en');
+    languageService.apply('en', false);
+    assert.equal(document.documentElement.lang, 'es');
+  } finally { globalThis.document = previousDocument; language.set('es'); }
+});
+
+test('Las habilidades cambian de idioma sin alterar identidad, filtros ni datos originales', () => {
+  const original = localizedSkills('es');
+  const english = localizedSkills('en');
+  assert.equal(english.length, 8);
+  english.forEach((skill, index) => {
+    assert.equal(skill.id, original[index].id);
+    assert.equal(skill.name, original[index].name);
+    assert.equal(skill.category, original[index].category);
+    assert.notEqual(skill.description, original[index].description);
+    assert.notEqual(skill.label, original[index].label);
+  });
+  assert.match(english.find(skill => skill.id === 'html').example, /A new possibility/);
+  assert.match(localizedSkills('es').find(skill => skill.id === 'html').example, /Una nueva posibilidad/);
+  assert.equal(translateText('Selected', 'es'), 'Mis');
+  assert.equal(translateText('Selected', 'en'), 'Selected');
+  assert.equal(translateText('Focus Flow', 'en'), 'Focus Flow');
 });
 
 test('Las partidas conservan el nombre y se separan por juego sin enviar a rutas inexistentes', async () => {

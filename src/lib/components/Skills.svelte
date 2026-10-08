@@ -1,15 +1,19 @@
 <script lang="ts">
+  import { translate as t } from '$lib/stores/language';
   import { onDestroy } from 'svelte';
-  import { skills, skillCategories } from '$lib/data/skills';
+  import { skillCategories } from '$lib/data/skills';
+  import { localizedSkills } from '$lib/data/skillsEnglish';
+  import { language } from '$lib/stores/language';
   import { reveal } from '$lib/animations/motion';
   import { cardGleam } from '$lib/animations/cardGleam';
   import SkillIcon from './SkillIcon.svelte';
   import Icon from './Icon.svelte';
   let category: string = 'all';
-  let selected = skills[0].id;
+  let selected = 'javascript';
   let copied = false;
   let copyMessage = '';
   let timeout: ReturnType<typeof setTimeout>;
+  $: skills = localizedSkills($language);
   $: visible = skills.filter(skill => category === 'all' || skill.category === category);
   $: current = skills.find(skill => skill.id === selected)!;
   function select(id: string) { selected = id; copied = false; copyMessage = ''; clearTimeout(timeout); }
@@ -23,11 +27,11 @@
   onDestroy(() => clearTimeout(timeout));
 </script>
 <section class="skills-section shell" id="skills">
-  <div class="skills-heading" use:reveal><div><p class="eyebrow">02 / MI CAJA DE HERRAMIENTAS</p><h2>Ideas distintas.<br /><span class="serif">Muchas posibilidades.</span></h2></div><p>Lenguajes y herramientas con los que construyo.<br />Elige uno y descubre un poco más.</p></div>
-  <div class="skill-filter" use:reveal aria-label="Filtrar skills">{#each skillCategories as item}<button class:active={category === item.id} aria-pressed={category === item.id} on:click={() => filter(item.id)}>{item.label}<span>{skills.filter(s => item.id === 'all' || s.category === item.id).length}</span></button>{/each}</div>
+  <div class="skills-heading" use:reveal><div><p class="eyebrow">{$t("02 / MI CAJA DE HERRAMIENTAS")}</p><h2>{$t("Ideas distintas.")}<br /><span class="serif">{$t("Muchas posibilidades.")}</span></h2></div><p>{$t("Lenguajes y herramientas con los que construyo.")}<br />{$t("Elige uno y descubre un poco más.")}</p></div>
+  <div class="skill-filter" use:reveal aria-label="{$t("Filtrar skills")}">{#each skillCategories as item}<button class:active={category === item.id} aria-pressed={category === item.id} on:click={() => filter(item.id)}>{$t(item.label)}<span>{skills.filter(s => item.id === 'all' || s.category === item.id).length}</span></button>{/each}</div>
   <div class="skill-layout">
-    <div class="skill-grid" use:reveal={80}>{#each visible as skill (skill.id)}<button class="skill-card" class:selected={selected === skill.id} style={`--skill-color:${skill.color}`} aria-pressed={selected === skill.id} aria-controls="skill-detail" on:click={() => select(skill.id)} use:cardGleam><span class="skill-gleam" aria-hidden="true"></span><span class="skill-card-top"><SkillIcon name={skill.id} /><span class="skill-card-arrow"><Icon name="arrow" size={16} /></span></span><strong>{skill.name}</strong><span class="skill-card-label">{skill.category === 'lenguajes' ? 'LENGUAJE' : skill.category === 'web' ? 'FUNDAMENTOS WEB' : 'FRAMEWORK'}</span></button>{/each}</div>
-    <div class="skill-detail" id="skill-detail" role="region" aria-label="Detalle de la tecnología seleccionada" use:reveal={160} style={`--skill-color:${current.color}`}><div class="skill-detail-top"><span>EN MI TOOLKIT</span><span>{(skills.indexOf(current) + 1).toString().padStart(2, '0')} / {skills.length.toString().padStart(2, '0')}</span></div>{#key selected}<div class="skill-detail-content"><div class="skill-detail-name"><span class="skill-detail-icon"><SkillIcon name={current.id} size={44} /></span><h3>{current.name}<span>↗</span></h3></div><p class="skill-motto">{current.label}</p><p class="skill-description">{current.description}</p><div class="skill-tags">{#each current.tags as tag}<span>{tag}</span>{/each}</div><div class="skill-editor"><header><span class="editor-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>un pequeño ejemplo</span><button on:click={copy} aria-label={`Copiar ejemplo de ${current.name}`}><Icon name={copied ? 'check' : 'plus'} size={14} />{copied ? 'Copiado' : 'Copiar'}</button></header><pre><code>{current.example}</code></pre></div></div>{/key}<div class="skill-detail-bottom"><Icon name="spark" size={15} /><span>Cada herramienta, una nueva forma de crear.</span></div><p class="skill-copy-status" role="status">{copyMessage}</p></div>
+    <div class="skill-grid" use:reveal={80}>{#each visible as skill (skill.id)}<button class="skill-card" class:selected={selected === skill.id} style={`--skill-color:${skill.color}`} aria-pressed={selected === skill.id} aria-controls="skill-detail" on:click={() => select(skill.id)} use:cardGleam><span class="skill-gleam" aria-hidden="true"></span><span class="skill-card-top"><SkillIcon name={skill.id} /><span class="skill-card-arrow"><Icon name="arrow" size={16} /></span></span><strong>{skill.name}</strong><span class="skill-card-label">{$t(skill.category === 'lenguajes' ? 'LENGUAJE' : skill.category === 'web' ? 'FUNDAMENTOS WEB' : 'FRAMEWORK')}</span></button>{/each}</div>
+    <div class="skill-detail" id="skill-detail" role="region" aria-label="{$t("Detalle de la tecnología seleccionada")}" use:reveal={160} style={`--skill-color:${current.color}`}><div class="skill-detail-top"><span>{$t("EN MI TOOLKIT")}</span><span>{(skills.indexOf(current) + 1).toString().padStart(2, '0')} / {skills.length.toString().padStart(2, '0')}</span></div>{#key selected}<div class="skill-detail-content"><div class="skill-detail-name"><span class="skill-detail-icon"><SkillIcon name={current.id} size={44} /></span><h3>{current.name}<span>↗</span></h3></div><p class="skill-motto">{current.label}</p><p class="skill-description">{current.description}</p><div class="skill-tags">{#each current.tags as tag}<span>{tag}</span>{/each}</div><div class="skill-editor"><header><span class="editor-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>{$t("un pequeño ejemplo")}</span><button on:click={copy} aria-label={`${$t('Copiar ejemplo de')} ${current.name}`}><Icon name={copied ? 'check' : 'plus'} size={14} />{$t(copied ? 'Copiado' : 'Copiar')}</button></header><pre><code>{current.example}</code></pre></div></div>{/key}<div class="skill-detail-bottom"><Icon name="spark" size={15} /><span>{$t("Cada herramienta, una nueva forma de crear.")}</span></div><p class="skill-copy-status" role="status">{$t(copyMessage)}</p></div>
   </div>
 </section>
 <style>

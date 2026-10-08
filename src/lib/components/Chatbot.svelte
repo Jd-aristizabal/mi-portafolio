@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { translate as t } from '$lib/stores/language';
   import Icon from './Icon.svelte';
   import { tick, onMount } from 'svelte';
   import { chatService } from '$lib/services/chatService';
@@ -15,7 +16,8 @@
   async function close() { open = false; await tick(); toggleButton?.focus({ preventScroll: true }); }
   function toggle(event: MouseEvent) { if (open) { void close(); return; } focusAfterOpen = event.detail === 0; open = true; }
   const actions = contactService.getActions();
-  let messages = [{ role: 'assistant', text: '¡Hola! Soy el asistente del portafolio de Johan. ¿Qué te gustaría explorar?', link: '', label: '' }];
+  const greeting = '¡Hola! Soy el asistente del portafolio de Johan. ¿Qué te gustaría explorar?';
+  let messages = [{ role: 'assistant', text: greeting, link: '', label: '' }];
   async function send(text: string) {
     if (!text.trim() || sending) return;
     sending = true;
@@ -32,14 +34,14 @@
 </script>
 <svelte:window on:keydown={(event) => { if (open && event.key === 'Escape') { event.preventDefault(); void close(); } }} />
 {#if open}
-  <aside id="chat-panel" class="chat-panel" aria-label="Asistente del portafolio" inert={!open} transition:chatDroplet={{ trigger: toggleButton }} on:introend={() => { if (open && focusAfterOpen) messageInput?.focus({ preventScroll: true }); }}>
-    <header><span class="chat-avatar"><Icon name="spark" /></span><div><strong>Un pequeño asistente</strong><small>Proyectos, ideas y contacto</small></div><button class="icon-button" aria-label="Cerrar asistente" on:click={close}><Icon name="close" /></button></header>
-    <div class="chat-messages" bind:this={messageList} aria-live="polite">{#each messages as message}<div class:user={message.role === 'user'} class="bubble">{message.text}{#if message.link}<a href={message.link} target={message.link.startsWith('https') ? '_blank' : undefined} rel="noreferrer" on:click={() => { if (message.link.startsWith('/')) open = false; }}>{message.label} ↗</a>{/if}</div>{/each}</div>
-    <div class="quick-actions">{#each actions as action}<button disabled={sending} on:click={() => send(action.label)}>{action.label}</button>{/each}</div>
-    <form on:submit|preventDefault={() => send(input)}><input bind:this={messageInput} bind:value={input} aria-label="Mensaje al asistente" placeholder="Escribe tu pregunta…" maxlength="200" /><button class="icon-button" aria-label="Enviar mensaje" disabled={!input.trim() || sending}><Icon name="arrow" /></button></form>
+  <aside id="chat-panel" class="chat-panel" aria-label="{$t("Asistente del portafolio")}" inert={!open} transition:chatDroplet={{ trigger: toggleButton }} on:introend={() => { if (open && focusAfterOpen) messageInput?.focus({ preventScroll: true }); }}>
+    <header><span class="chat-avatar"><Icon name="spark" /></span><div><strong>{$t("Un pequeño asistente")}</strong><small>{$t("Proyectos, ideas y contacto")}</small></div><button class="icon-button" aria-label="{$t("Cerrar asistente")}" on:click={close}><Icon name="close" /></button></header>
+    <div class="chat-messages" bind:this={messageList} aria-live="polite">{#each messages as message}<div class:user={message.role === 'user'} class="bubble">{message.role === 'assistant' && message.text === greeting ? $t(greeting) : message.text}{#if message.link}<a href={message.link} target={message.link.startsWith('https') ? '_blank' : undefined} rel="noreferrer" on:click={() => { if (message.link.startsWith('/')) open = false; }}>{$t(message.label)} ↗</a>{/if}</div>{/each}</div>
+    <div class="quick-actions">{#each actions as action}<button disabled={sending} on:click={() => send(action.label)}>{$t(action.label)}</button>{/each}</div>
+    <form on:submit|preventDefault={() => send(input)}><input bind:this={messageInput} bind:value={input} aria-label="{$t("Mensaje al asistente")}" placeholder="{$t("Escribe tu pregunta…")}" maxlength="200" /><button class="icon-button" aria-label="{$t("Enviar mensaje")}" disabled={!input.trim() || sending}><Icon name="arrow" /></button></form>
   </aside>
 {/if}
-<button id="chat-trigger" bind:this={toggleButton} class="chat-toggle" class:chat-open={open} aria-label={open ? 'Cerrar asistente' : 'Abrir asistente'} aria-expanded={open} aria-controls="chat-panel" on:click={toggle}><Icon name={open ? 'close' : 'chat'} size={23} /></button>
+<button id="chat-trigger" bind:this={toggleButton} class="chat-toggle" class:chat-open={open} aria-label={$t(open ? 'Cerrar asistente' : 'Abrir asistente')} aria-expanded={open} aria-controls="chat-panel" on:click={toggle}><Icon name={open ? 'close' : 'chat'} size={23} /></button>
 <style>
   .chat-panel{--chat-origin:#282c27;--chat-surface:var(--surface);animation:none;will-change:transform;border-radius:13px}
   .chat-panel > *{opacity:var(--chat-content-opacity,1);translate:0 var(--chat-content-offset,0px)}
