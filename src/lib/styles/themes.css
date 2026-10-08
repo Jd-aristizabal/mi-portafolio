@@ -7,6 +7,8 @@
   --hero-muted: #66616e;
   --theme-accent: #78549b;
   --hero-line: #d6cfdc;
+  --hero-glow: #c6a8df24;
+  --hero-depth: #b6a2ce0b;
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
@@ -21,6 +23,8 @@
   --hero-muted: #b6b2c1;
   --theme-accent: #bda1ed;
   --hero-line: #ffffff25;
+  --hero-glow: #bda1ed14;
+  --hero-depth: #10111655;
 }
 :root[data-theme] { background: var(--paper); color: var(--ink); }
 body { background: var(--paper); }

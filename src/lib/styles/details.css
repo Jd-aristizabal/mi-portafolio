@@ -8,6 +8,9 @@
   animation: halo-breathe 7s ease-in-out infinite;
   animation-play-state: var(--ambient-play, running);
 }
+@media(max-width:760px) {
+  .portfolio .sculpture-wrap { transform: none; will-change: auto; }
+}
 .portfolio .skill-card .skill-gleam {
   position: absolute;
   inset: -60% -50%;

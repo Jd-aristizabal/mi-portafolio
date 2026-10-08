@@ -9,12 +9,65 @@ import { theme, themeActions } from '../src/lib/stores/theme.ts';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { cardGleam } from '../src/lib/animations/cardGleam.ts';
+import { parallax } from '../src/lib/animations/motion.ts';
 import { taskStore, taskActions } from '../src/lib/stores/tasks.ts';
 import { multiplierFor, levelFor, targetDurationFor, chooseTarget } from '../src/lib/utils/game.ts';
 let saved;
 beforeEach(() => {
   saved = new Map();
   globalThis.window = { localStorage: { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) } };
+});
+
+test('El átomo no se desplaza con el scroll móvil y recupera el parallax en escritorio', () => {
+  const compact = Object.assign(new EventTarget(), { matches: true });
+  const reduced = Object.assign(new EventTarget(), { matches: false });
+  const events = new EventTarget();
+  window.matchMedia = query => query.includes('760px') ? compact : reduced;
+  window.addEventListener = events.addEventListener.bind(events);
+  window.removeEventListener = events.removeEventListener.bind(events);
+  window.innerHeight = 800;
+  const old = { request: globalThis.requestAnimationFrame, cancel: globalThis.cancelAnimationFrame, observer: globalThis.IntersectionObserver };
+  const frames = new Map();
+  let id = 0, measurements = 0, disconnected = false;
+  globalThis.requestAnimationFrame = callback => { frames.set(++id, callback); return id; };
+  globalThis.cancelAnimationFrame = frame => frames.delete(frame);
+  globalThis.IntersectionObserver = class {
+    constructor(callback) { this.callback = callback; }
+    observe() { this.callback([{ isIntersecting: true }]); }
+    disconnect() { disconnected = true; }
+  };
+  const properties = new Map();
+  const node = { style: { setProperty: (key, value) => properties.set(key, value) }, getBoundingClientRect: () => { measurements++; return { top: 100, height: 300 }; } };
+  let action;
+  try {
+    action = parallax(node, 90);
+    events.dispatchEvent(new Event('scroll'));
+    assert.equal(properties.get('--parallax-y'), '0px');
+    assert.equal(frames.size, 0);
+    assert.equal(measurements, 0);
+    compact.matches = false;
+    compact.dispatchEvent(new Event('change'));
+    assert.equal(frames.size, 1);
+    const [frame, callback] = frames.entries().next().value;
+    frames.delete(frame); callback();
+    assert.notEqual(properties.get('--parallax-y'), '0px');
+    compact.matches = true;
+    compact.dispatchEvent(new Event('change'));
+    events.dispatchEvent(new Event('resize'));
+    assert.equal(properties.get('--parallax-y'), '0px');
+    assert.equal(frames.size, 0);
+    action.destroy(); action = undefined;
+    assert.equal(disconnected, true);
+    compact.matches = false;
+    compact.dispatchEvent(new Event('change'));
+    events.dispatchEvent(new Event('scroll'));
+    assert.equal(frames.size, 0);
+  } finally {
+    action?.destroy();
+    globalThis.requestAnimationFrame = old.request;
+    globalThis.cancelAnimationFrame = old.cancel;
+    globalThis.IntersectionObserver = old.observer;
+  }
 });
 
 test('El reflejo funciona al tocar, se reinicia y respeta movimiento reducido', () => {

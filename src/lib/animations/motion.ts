@@ -69,18 +69,24 @@ export function projectMotion(node: HTMLElement) {
 
 export function parallax(node: HTMLElement, distance = 50) {
   const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const compact = window.matchMedia('(max-width: 760px)');
   let frame = 0, visible = true;
   function update() {
     frame = 0;
-    if (preference.matches) { node.style.setProperty('--parallax-y', '0px'); return; }
+    if (preference.matches || compact.matches) { node.style.setProperty('--parallax-y', '0px'); return; }
     if (!visible) return;
     const box = node.getBoundingClientRect();
     const position = Math.max(-1, Math.min(1, (window.innerHeight / 2 - box.top - box.height / 2) / window.innerHeight));
     node.style.setProperty('--parallax-y', `${position * distance}px`);
   }
-  function schedule() { if (!frame && visible) frame = requestAnimationFrame(update); }
+  function schedule() { if (!frame && visible && !preference.matches && !compact.matches) frame = requestAnimationFrame(update); }
+  function adapt() {
+    cancelAnimationFrame(frame); frame = 0;
+    if (preference.matches || compact.matches) node.style.setProperty('--parallax-y', '0px');
+    else schedule();
+  }
   const observer = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) schedule(); });
   observer.observe(node);
-  window.addEventListener('scroll', schedule, { passive: true }); window.addEventListener('resize', schedule); preference.addEventListener('change', schedule); schedule();
-  return { destroy() { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule); preference.removeEventListener('change', schedule); } };
+  window.addEventListener('scroll', schedule, { passive: true }); window.addEventListener('resize', schedule); preference.addEventListener('change', adapt); compact.addEventListener('change', adapt); adapt();
+  return { destroy() { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule); preference.removeEventListener('change', adapt); compact.removeEventListener('change', adapt); } };
 }
