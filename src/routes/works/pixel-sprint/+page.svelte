@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import Icon from '$lib/components/Icon.svelte';
   import { scoreService } from '$lib/services/scoreService';
+  import { errorMessage } from '$lib/services/api';
   import type { Score } from '$lib/types';
   import { gameRules, multiplierFor, levelFor, targetDurationFor, chooseTarget } from '$lib/utils/game';
   type Phase = 'idle' | 'countdown' | 'playing' | 'result';
@@ -32,7 +33,7 @@
   async function refreshScores() { best = await scoreService.best(); scores = await scoreService.leaderboard(); }
   function newTarget(now: number) { target = chooseTarget(lastTarget); lastTarget = target; nextAt = now + targetDurationFor(hits); }
   function start() { points = 0; combo = 0; hits = 0; misses = 0; maxCombo = 0; seconds = gameRules.durationSeconds; feedback = ''; flashCell = -1; target = -1; count = 3; previousBest = best; phase = 'countdown'; countdownAt = performance.now() + 3000; }
-  async function end() { phase = 'result'; target = -1; try { best = await scoreService.record(points); await refreshScores(); } catch { best = Math.max(best, points); storageError = 'Tu récord estará disponible en esta visita; el navegador no permitió guardarlo.'; } }
+  async function end() { if (phase !== 'playing') return; phase = 'result'; target = -1; const result = { score: points, max_combo: maxCombo, level: levelFor(hits), duration_seconds: gameRules.durationSeconds }; try { best = await scoreService.record(result); await refreshScores(); storageError = ''; } catch (error) { storageError = errorMessage(error); } }
   function hit(cell: number) {
     if (phase !== 'playing') return;
     const now = performance.now();
@@ -44,7 +45,7 @@
   }
   function keydown(event: KeyboardEvent) { if (phase !== 'playing' || event.repeat || event.ctrlKey || event.altKey || event.metaKey) return; const origin = event.target; if (origin instanceof HTMLElement && (origin.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(origin.tagName))) return; const cell = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].indexOf(event.key); if (cell >= 0) { event.preventDefault(); hit(cell); } }
   onMount(() => {
-    void refreshScores();
+    void refreshScores().catch(error => storageError = errorMessage(error));
     const interval = setInterval(() => {
       const now = performance.now();
       if (flashCell >= 0 && now >= flashUntil) flashCell = -1;
@@ -63,6 +64,6 @@
   {:else if phase === 'countdown'}<div class="game-overlay countdown" aria-live="assertive"><p class="eyebrow">PREPARA TUS REFLEJOS</p><strong>{count}</strong><p>¡Vamos a darle!</p></div>
   {:else if phase === 'result'}<div class="game-overlay result"><Icon name="trophy" size={35} /><p class="eyebrow">{points > previousBest ? '¡NUEVO RÉCORD PERSONAL!' : 'PARTIDA COMPLETADA'}</p><h2>{points}<small> puntos</small></h2><div class="result-stats"><span><strong>{hits}</strong>Aciertos</span><span><strong>{accuracy}%</strong>Precisión</span><span><strong>{maxCombo}</strong>Mejor racha</span></div><button class="button lime" on:click={start}>Una vez más <Icon name="reset" size={18} /></button><small>Cada intento es una nueva oportunidad.</small></div>{/if}</div>
   <div class="game-bottom"><span>NIVEL {level.toString().padStart(2, '0')} <span class="level-dots">{'▮'.repeat(level)}{'▯'.repeat(8 - level)}</span></span><span>{phase === 'playing' ? `${combo} ACIERTOS EN RACHA` : 'ENCUENTRA TU RITMO'}</span></div></section>
-  <aside class="pixel-sidebar"><section class="panel record-panel"><Icon name="trophy" size={24} /><p class="eyebrow">TU MEJOR PUNTUACIÓN</p><strong>{best.toLocaleString('es-CO')}</strong><p>Un pequeño reto contigo mismo.</p></section><section class="panel leaderboard"><div class="panel-heading"><h2>Marcas a superar</h2><span class="mock-badge">RETOS</span></div><p class="leaderboard-note">Objetivos para tu próxima partida.</p>{#each scores as score, i}<div class="leader-row" class:local={score.local}><span>{(i + 1).toString().padStart(2, '0')}</span><strong>{score.name}</strong><span>{score.score.toLocaleString('es-CO')}</span></div>{/each}</section><section class="game-instructions"><h3>El secreto está en el ritmo.</h3><p><span>01</span> Sigue el píxel verde.</p><p><span>02</span> Cada 5 aciertos aumenta tu combo.</p><p><span>03</span> La velocidad sube cada 7 aciertos.</p><small>Un fallo rompe la racha. Tu puntuación se conserva. El combo llega hasta ×5.</small></section></aside></div>
+  <aside class="pixel-sidebar"><section class="panel record-panel"><Icon name="trophy" size={24} /><p class="eyebrow">TU MEJOR PUNTUACIÓN</p><strong>{best.toLocaleString('es-CO')}</strong><p>Un pequeño reto contigo mismo.</p></section><section class="panel leaderboard"><div class="panel-heading"><h2>Marcas a superar</h2><span class="mock-badge">TOP 10</span></div><p class="leaderboard-note">Mejores puntuaciones de la comunidad.</p>{#each scores as score, i}<div class="leader-row" class:local={score.local}><span>{(i + 1).toString().padStart(2, '0')}</span><strong>{score.name}</strong><span>{score.score.toLocaleString('es-CO')}</span></div>{/each}</section><section class="game-instructions"><h3>El secreto está en el ritmo.</h3><p><span>01</span> Sigue el píxel verde.</p><p><span>02</span> Cada 5 aciertos aumenta tu combo.</p><p><span>03</span> La velocidad sube cada 7 aciertos.</p><small>Un fallo rompe la racha. Tu puntuación se conserva. El combo llega hasta ×5.</small></section></aside></div>
   {#if storageError}<p class="storage-note" role="status">{storageError}</p>{/if}<div class="game-caption"><Icon name="spark" size={18} /><p>Un experimento en interacción, feedback y ese irresistible “una partida más”.</p></div>
 </div>

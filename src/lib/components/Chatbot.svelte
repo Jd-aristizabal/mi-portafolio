@@ -1,10 +1,13 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { tick } from 'svelte';
+  import { tick, onMount } from 'svelte';
+  import { chatService } from '$lib/services/chatService';
+  import { errorMessage } from '$lib/services/api';
   import { contactService } from '$lib/services/contactService';
   import { chatDroplet } from '$lib/animations/chat';
   let open = false;
   let input = '';
+  let sending = false;
   let messageList: HTMLDivElement;
   let toggleButton: HTMLButtonElement;
   let messageInput: HTMLInputElement;
@@ -14,21 +17,26 @@
   const actions = contactService.getActions();
   let messages = [{ role: 'assistant', text: '¡Hola! Soy el asistente del portafolio de Johan. ¿Qué te gustaría explorar?', link: '', label: '' }];
   async function send(text: string) {
-    if (!text.trim()) return;
-    const answer = actions.find(a => a.label === text) || contactService.respond(text);
-    messages = [...messages, { role: 'user', text: text.trim(), link: '', label: '' }, { role: 'assistant', text: answer.answer, link: answer.link, label: answer.linkLabel }].slice(-12);
+    if (!text.trim() || sending) return;
+    sending = true;
+    const action = actions.find(a => a.label === text);
+    messages = [...messages, { role: 'user', text: text.trim(), link: '', label: '' }].slice(-12);
     input = '';
+    try { const answer = await chatService.send(text.trim()); messages = [...messages, { role: 'assistant', text: answer, link: action?.link || '', label: action?.linkLabel || '' }].slice(-12); }
+    catch (error) { messages = [...messages, { role: 'assistant', text: errorMessage(error), link: '', label: '' }].slice(-12); }
+    finally { sending = false; }
     await tick();
     if (messageList) messageList.scrollTop = messageList.scrollHeight;
   }
+  onMount(() => { void chatService.history().then(history => { if (history.length && messages.length === 1 && !sending) messages = history.slice(-12).map(m => ({ role: m.role, text: m.content, link: '', label: '' })); }).catch(error => { messages = [...messages, { role: 'assistant', text: errorMessage(error), link: '', label: '' }]; }); });
 </script>
 <svelte:window on:keydown={(event) => { if (open && event.key === 'Escape') { event.preventDefault(); void close(); } }} />
 {#if open}
   <aside id="chat-panel" class="chat-panel" aria-label="Asistente del portafolio" inert={!open} transition:chatDroplet={{ trigger: toggleButton }} on:introend={() => { if (open && focusAfterOpen) messageInput?.focus({ preventScroll: true }); }}>
     <header><span class="chat-avatar"><Icon name="spark" /></span><div><strong>Un pequeño asistente</strong><small>Proyectos, ideas y contacto</small></div><button class="icon-button" aria-label="Cerrar asistente" on:click={close}><Icon name="close" /></button></header>
     <div class="chat-messages" bind:this={messageList} aria-live="polite">{#each messages as message}<div class:user={message.role === 'user'} class="bubble">{message.text}{#if message.link}<a href={message.link} target={message.link.startsWith('https') ? '_blank' : undefined} rel="noreferrer" on:click={() => { if (message.link.startsWith('/')) open = false; }}>{message.label} ↗</a>{/if}</div>{/each}</div>
-    <div class="quick-actions">{#each actions as action}<button on:click={() => send(action.label)}>{action.label}</button>{/each}</div>
-    <form on:submit|preventDefault={() => send(input)}><input bind:this={messageInput} bind:value={input} aria-label="Mensaje al asistente" placeholder="Escribe tu pregunta…" maxlength="200" /><button class="icon-button" aria-label="Enviar mensaje" disabled={!input.trim()}><Icon name="arrow" /></button></form>
+    <div class="quick-actions">{#each actions as action}<button disabled={sending} on:click={() => send(action.label)}>{action.label}</button>{/each}</div>
+    <form on:submit|preventDefault={() => send(input)}><input bind:this={messageInput} bind:value={input} aria-label="Mensaje al asistente" placeholder="Escribe tu pregunta…" maxlength="200" /><button class="icon-button" aria-label="Enviar mensaje" disabled={!input.trim() || sending}><Icon name="arrow" /></button></form>
   </aside>
 {/if}
 <button id="chat-trigger" bind:this={toggleButton} class="chat-toggle" class:chat-open={open} aria-label={open ? 'Cerrar asistente' : 'Abrir asistente'} aria-expanded={open} aria-controls="chat-panel" on:click={toggle}><Icon name={open ? 'close' : 'chat'} size={23} /></button>

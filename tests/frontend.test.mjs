@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { get } from 'svelte/store';
 import { taskService } from '../src/lib/services/taskService.ts';
 import { scoreService } from '../src/lib/services/scoreService.ts';
+import { chatService } from '../src/lib/services/chatService.ts';
+import { api, clientID } from '../src/lib/services/api.ts';
 import { contactService } from '../src/lib/services/contactService.ts';
 import { themeService } from '../src/lib/services/themeService.ts';
 import { theme, themeActions } from '../src/lib/stores/theme.ts';
@@ -12,10 +14,31 @@ import { cardGleam } from '../src/lib/animations/cardGleam.ts';
 import { parallax } from '../src/lib/animations/motion.ts';
 import { taskStore, taskActions } from '../src/lib/stores/tasks.ts';
 import { multiplierFor, levelFor, targetDurationFor, chooseTarget } from '../src/lib/utils/game.ts';
-let saved;
+let saved, remoteTasks, remoteSessions, remoteScores, calls;
 beforeEach(() => {
   saved = new Map();
-  globalThis.window = { localStorage: { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value) } };
+  remoteTasks = []; remoteSessions = []; remoteScores = []; calls = [];
+  taskStore.set({ tasks: [], sessions: [] });
+  globalThis.window = { localStorage: { getItem: key => saved.get(key) ?? null, setItem: (key, value) => saved.set(key, value), removeItem: key => saved.delete(key) } };
+  globalThis.fetch = async (url, options) => {
+    const path = new URL(url).pathname.replace('/api/v1', '');
+    const body = options.body ? JSON.parse(options.body) : undefined;
+    calls.push({ path, method: options.method, body, headers: options.headers });
+    let data;
+    if (path === '/focus/stats') data = { tasks_completed: remoteTasks.filter(t => t.completed).length, tasks_total: remoteTasks.length, focused_minutes: remoteSessions.filter(s => s.status === 'completed').reduce((n, s) => n + s.duration_seconds / 60, 0), sessions_completed: remoteSessions.filter(s => s.status === 'completed').length, last_7_days: [] };
+    else if (path === '/focus/tasks' && options.method === 'POST') { data = { ...body, id: crypto.randomUUID(), completed: false, created_at: new Date().toISOString() }; remoteTasks.unshift(data); }
+    else if (path === '/focus/tasks') data = remoteTasks;
+    else if (path.startsWith('/focus/tasks/')) { const id = path.split('/').at(-1); if (options.method === 'DELETE') { remoteTasks = remoteTasks.filter(t => t.id !== id); return new Response(null, { status: 204 }); } data = Object.assign(remoteTasks.find(t => t.id === id), body); }
+    else if (path === '/focus/sessions' && options.method === 'POST') { data = { ...body, id: crypto.randomUUID(), started_at: new Date().toISOString(), status: 'active', task_title: 'Proyecto', task_id: body.task_id || null }; remoteSessions.unshift(data); }
+    else if (path === '/focus/sessions') data = remoteSessions;
+    else if (path.startsWith('/focus/sessions/')) { data = remoteSessions.find(s => s.id === path.split('/')[3]); data.status = path.endsWith('/complete') ? 'completed' : 'cancelled'; data.finished_at = new Date().toISOString(); }
+    else if (path === '/games/pixel-sprint/scores') { remoteScores.push(body); data = body; }
+    else if (path === '/games/pixel-sprint/me') data = { best_score: Math.max(0, ...remoteScores.map(s => s.score)) };
+    else if (path === '/games/pixel-sprint/leaderboard') data = [{ player_name: null, score: 3000 }];
+    else if (path === '/chat') data = { conversation_id: 'saved-conversation', message: 'Johan desarrolla Focus Flow.' };
+    else throw new Error('Ruta de prueba desconocida: ' + path);
+    return Response.json({ data });
+  };
 });
 
 test('El átomo no se desplaza con el scroll móvil y recupera el parallax en escritorio', () => {
@@ -153,36 +176,52 @@ test('Las tareas pueden crearse, editarse, completarse, recargarse y eliminarse'
   await taskActions.remove(task.id);
   assert.equal((await taskService.load()).tasks.some(t => t.id === task.id), false);
 });
-test('El almacenamiento corrupto recupera datos utilizables y descarta entradas inválidas', async () => {
+test('Las tareas demo y récords locales no sustituyen datos del servidor', async () => {
   saved.set('focus-flow:v1', '{invalido');
-  assert.equal((await taskService.load()).tasks.length, 3);
-  saved.set('focus-flow:v1', JSON.stringify({ tasks: [{ id: 3 }], sessions: [{ minutes: -2 }] }));
-  assert.deepEqual(await taskService.load(), { tasks: [], sessions: [] });
+  assert.equal((await taskService.load()).tasks.length, 0);
   saved.set('pixel-sprint:best', '"incorrecto"');
   assert.equal(await scoreService.best(), 0);
 });
-test('Una lista vacía persiste sin volver a insertar las tareas demo', async () => {
-  await taskService.save({ tasks: [], sessions: [] });
-  assert.deepEqual(await taskService.load(), { tasks: [], sessions: [] });
+test('La identidad anónima es estable entre solicitudes', async () => {
+  const id = clientID();
+  await taskService.load();
+  assert.equal(clientID(), id);
+  assert.ok(calls.every(call => call.headers['X-Client-ID'] === id));
 });
 test('Las sesiones se conservan al recargar', async () => {
   await taskActions.load();
-  await taskActions.session({ id: 'test-session', minutes: 25, taskTitle: 'Proyecto', completedAt: new Date().toISOString() });
+  const active = await taskActions.start(25);
+  assert.equal(calls.find(c => c.path === '/focus/sessions' && c.method === 'POST').body.duration_seconds, 1500);
+  await taskActions.load();
+  assert.equal(get(taskStore).activeSession.id, active.id);
+  await taskActions.complete(active.id);
   await taskActions.load();
   assert.equal(get(taskStore).sessions[0].minutes, 25);
 });
-test('El récord nunca disminuye y el leaderboard combina mocks con el récord local', async () => {
-  assert.equal(await scoreService.record(3000), 3000);
-  assert.equal(await scoreService.record(100), 3000);
+test('La puntuación envía métricas reales y el leaderboard no incorpora mocks', async () => {
+  const result = { score: 3000, max_combo: 10, level: 3, duration_seconds: 30 };
+  assert.equal(await scoreService.record(result), 3000);
+  assert.deepEqual(calls.find(c => c.method === 'POST').body, result);
+  assert.equal(await scoreService.record({ ...result, score: 100 }), 3000);
   const board = await scoreService.leaderboard();
-  assert.equal(board[0].name, 'TÚ');
-  assert.equal(board[0].local, true);
-  assert.equal(board.length, 5);
+  assert.equal(board[0].name, 'Anónimo');
+  assert.equal(board.length, 1);
 });
 test('Los fallos de persistencia se comunican a la capa de interfaz', async () => {
-  globalThis.window.localStorage.setItem = () => { throw new Error('Almacenamiento bloqueado'); };
-  await assert.rejects(taskService.save({ tasks: [], sessions: [] }));
-  await assert.rejects(scoreService.record(100));
+  globalThis.fetch = async () => Response.json({ error: { message: 'No disponible' } }, { status: 503 });
+  await assert.rejects(taskActions.add('No guardada', 'media'));
+  assert.equal(get(taskStore).tasks.length, 0);
+});
+test('El chat conserva el identificador remoto y no usa respuestas predefinidas', async () => {
+  assert.equal(await chatService.send('Quien es Johan?'), 'Johan desarrolla Focus Flow.');
+  await chatService.send('Que proyectos tiene?');
+  assert.equal(calls[1].body.conversation_id, 'saved-conversation');
+});
+test('El rate limit informa el plazo y no reintenta llamadas costosas', async () => {
+  let requests = 0;
+  globalThis.fetch = async () => { requests++; return Response.json({ error: { message: 'Limite' } }, { status: 429, headers: { 'Retry-After': '42' } }); };
+  await assert.rejects(api('/chat', 'POST', { message: 'Hola' }), /42 segundos/);
+  assert.equal(requests, 1);
 });
 test('El combo y la dificultad progresan con límites estables', () => {
   assert.equal(multiplierFor(4), 1);
